@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<section class="hero"><div><p class="eyebrow">ADMIN OVERVIEW</p><h1>Dashboard</h1><p class="muted">{{ today.strftime("%A, %d %B %Y") }}</p></div><a class="button" href="{{ url_for('reports') }}">Monthly reports</a></section>
+<div class="stats">
+  <div class="stat"><span>Active staff</span><strong>{{ active_count }}</strong></div>
+  <div class="stat"><span>Checked in</span><strong>{{ present }}</strong></div>
+  <div class="stat"><span>Late</span><strong>{{ late }}</strong></div>
+  <div class="stat"><span>No check-in</span><strong>{{ absent }}</strong></div>
+</div>
+<div class="card"><div class="section-heading"><h2>Today's staff</h2><a href="{{ url_for('employees_page') }}">Manage employees →</a></div>
+<div class="table-wrap"><table><thead><tr><th>Employee</th><th>Check-in</th><th>Check-out</th><th>Status</th><th>Photos</th></tr></thead><tbody>
+{% for row in rows %}
+<tr><td><strong>{{ row.employee.name }}</strong><br><span class="muted small">{{ row.employee.employee_code }} · {{ row.employee.role }}</span></td>
+<td>{{ row.record.check_in.strftime("%H:%M:%S") if row.record and row.record.check_in else "—" }}</td>
+<td>{{ row.record.check_out.strftime("%H:%M:%S") if row.record and row.record.check_out else "—" }}</td>
+<td>{% if not row.record or not row.record.check_in %}<span class="pill danger">No check-in</span>{% elif row.record.check_in.time() > (row.record.check_in.replace(hour=9,minute=10,second=0,microsecond=0)).time() %}<span class="pill warning">Late</span>{% else %}<span class="pill success">Present</span>{% endif %}</td>
+<td>{% if row.record and row.record.check_in_photo %}<a href="{{ url_for('view_photo', filename=row.record.check_in_photo) }}" target="_blank">In</a>{% endif %}{% if row.record and row.record.check_out_photo %} · <a href="{{ url_for('view_photo', filename=row.record.check_out_photo) }}" target="_blank">Out</a>{% endif %}</td></tr>
+{% else %}<tr><td colspan="5">No employees added yet.</td></tr>{% endfor %}
+</tbody></table></div>
+<p class="muted small">“No check-in” is a live dashboard status; the report currently lists days with recorded attendance only. Absence rules should be adjusted for your pharmacy's roster and holidays.</p>
+</div>
+{% endblock %}

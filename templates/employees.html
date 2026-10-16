@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Employee Management{% endblock %}
+{% block content %}
+<section class="hero"><div><p class="eyebrow">STAFF DIRECTORY</p><h1>Employees</h1><p class="muted">Add staff and deactivate former employees without deleting history.</p></div></section>
+<div class="card">
+<h2>Add employee</h2>
+<form method="post" class="employee-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div><label for="employee_code">Employee ID</label><input id="employee_code" name="employee_code" placeholder="e.g. PH-001" required></div>
+<div><label for="name">Full name</label><input id="name" name="name" placeholder="Employee name" required></div>
+<div><label for="role">Role</label><input id="role" name="role" placeholder="Pharmacist, cashier…" value="Staff"></div>
+<div class="form-end"><button class="button" type="submit">Add employee</button></div>
+</form>
+</div>
+<div class="card"><h2>Staff list</h2><div class="table-wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Status</th><th>Action</th></tr></thead><tbody>
+{% for e in employees %}<tr><td>{{ e.employee_code }}</td><td>{{ e.name }}</td><td>{{ e.role }}</td><td>{{ "Active" if e.active else "Inactive" }}</td><td><form method="post" action="{{ url_for('toggle_employee', employee_id=e.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button small-button secondary" type="submit">{{ "Deactivate" if e.active else "Reactivate" }}</button></form></td></tr>{% else %}<tr><td colspan="5">No employees yet.</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

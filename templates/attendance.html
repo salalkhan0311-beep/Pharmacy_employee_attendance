@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Staff Attendance{% endblock %}
+{% block content %}
+<section class="hero">
+  <div><p class="eyebrow">STAFF PORTAL</p><h1>Daily attendance</h1><p class="muted">Select your name, allow camera access, and take a photo to record attendance.</p></div>
+  <div class="date-chip">{{ today.strftime("%A, %d %B %Y") }}</div>
+</section>
+<div class="card attendance-card">
+  {% if employees %}
+  <form id="attendanceForm" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="employee">Employee</label>
+    <select id="employee" required>
+      <option value="">Choose your name…</option>
+      {% for e in employees %}<option value="{{ e.id }}">{{ e.name }} — {{ e.employee_code }} ({{ e.role }})</option>{% endfor %}
+    </select>
+    <div class="camera-grid">
+      <div class="camera-box"><video id="video" autoplay playsinline></video><canvas id="canvas" hidden></canvas><img id="preview" alt="Captured attendance photo" hidden><div id="cameraMessage">Camera preview will appear here.</div></div>
+      <div class="camera-actions">
+        <button type="button" class="button secondary" id="startCamera">Enable camera</button>
+        <button type="button" class="button secondary" id="capture">Capture photo</button>
+        <p class="muted small">Allow camera permission when your browser asks. Photos are stored on this computer.</p>
+      </div>
+    </div>
+    <input type="hidden" name="photo" id="photo">
+    <div class="action-row">
+      <button class="button" type="button" data-action="in">Check in</button>
+      <button class="button dark" type="button" data-action="out">Check out</button>
+    </div>
+    <p class="small muted">The check-in/out button will submit the captured photo and record the server time.</p>
+  </form>
+  {% else %}
+    <h2>No active employees yet</h2><p>Ask the pharmacy administrator to add employees first.</p>
+  {% endif %}
+</div>
+<script>
+let stream = null;
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const preview = document.getElementById("preview");
+const photoInput = document.getElementById("photo");
+const message = document.getElementById("cameraMessage");
+const form = document.getElementById("attendanceForm");
+if (form) {
+  document.getElementById("startCamera").addEventListener("click", async () => {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "user"}, audio: false});
+      video.srcObject = stream;
+      message.textContent = "Camera is ready.";
+    } catch (e) {
+      message.textContent = "Could not open camera. Check browser permission and use localhost.";
+    }
+  });
+  document.getElementById("capture").addEventListener("click", () => {
+    if (!stream || !video.videoWidth) { message.textContent = "Enable the camera first."; return; }
+    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+    canvas.getContext("2d").drawImage(video, 0, 0);
+    const data = canvas.toDataURL("image/jpeg", 0.82);
+    photoInput.value = data;
+    preview.src = data; preview.hidden = false; video.hidden = true;
+    message.textContent = "Photo captured. If needed, reload the page to retake it.";
+    stream.getTracks().forEach(track => track.stop());
+  });
+  document.querySelectorAll("[data-action]").forEach(button => button.addEventListener("click", () => {
+    if (!document.getElementById("employee").value) { alert("Please select your name."); return; }
+    if (!photoInput.value) { alert("Please enable the camera and capture a photo first."); return; }
+    form.action = `/attendance/${document.getElementById("employee").value}/${button.dataset.action}`;
+    form.submit();
+  }));
+}
+</script>
+{% endblock %}

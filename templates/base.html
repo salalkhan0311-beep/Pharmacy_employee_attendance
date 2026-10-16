@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Pharmacy Attendance{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="{{ url_for('attendance_page') }}">✚ Pharmacy Attendance</a>
+  <nav>
+    <a href="{{ url_for('attendance_page') }}">Staff check-in</a>
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('employees_page') }}">Employees</a>
+      <a href="{{ url_for('reports') }}">Reports</a>
+      <a href="{{ url_for('change_password') }}">Change password</a>
+      <form class="inline" action="{{ url_for('admin_logout') }}" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="navbutton">Log out</button></form>
+    {% else %}
+      <a href="{{ url_for('admin_login') }}">Admin login</a>
+    {% endif %}
+  </nav>
+</header>
+<main class="container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="notice {{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
+<footer>Pharmacy Staff Attendance · Keep employee photos private.</footer>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Monthly Reports{% endblock %}
+{% block content %}
+<section class="hero"><div><p class="eyebrow">REPORTING</p><h1>Monthly attendance</h1><p class="muted">Review recorded shifts and export a CSV file for Excel.</p></div></section>
+<div class="card">
+<form method="get" class="report-filter"><div><label for="month">Month</label><input type="month" id="month" name="month" value="{{ month }}" required></div><button class="button" type="submit">View report</button><a class="button secondary" href="{{ url_for('reports', month=month, export='csv') }}">Export CSV</a></form>
+<div class="table-wrap"><table><thead><tr><th>Date</th><th>Employee</th><th>Check-in</th><th>Check-out</th><th>Status</th><th>Hours</th></tr></thead><tbody>
+{% for r in records %}
+{% set late_limit = r.check_in.replace(hour=9, minute=10, second=0, microsecond=0) if r.check_in else none %}
+<tr><td>{{ r.work_date.strftime("%d %b %Y") }}</td><td>{{ r.employee.name }}<br><span class="muted small">{{ r.employee.employee_code }}</span></td><td>{{ r.check_in.strftime("%H:%M:%S") if r.check_in else "—" }}</td><td>{{ r.check_out.strftime("%H:%M:%S") if r.check_out else "—" }}</td><td>{% if not r.check_in %}Absent{% elif r.check_in > late_limit %}Late{% else %}Present{% endif %}</td><td>{% if r.check_in and r.check_out %}{{ "%.2f"|format((r.check_out-r.check_in).total_seconds()/3600) }}{% else %}—{% endif %}</td></tr>
+{% else %}<tr><td colspan="6">No attendance records for this month.</td></tr>{% endfor %}
+</tbody></table></div>
+<p class="muted small">This starter report includes recorded attendance rows. Full absence reporting requires defining each employee's work schedule and pharmacy holidays.</p>
+</div>
+{% endblock %}
